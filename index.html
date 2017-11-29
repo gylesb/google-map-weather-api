@@ -8,8 +8,9 @@
    <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
     <script type="text/javascript" src="build/js/app.js"></script>
+    <title>Place details</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Bike API</title>
   </head>
   <body>
     <div class="container-fluid">
@@ -18,20 +19,21 @@
       </div>
       <div class="form" id="formSearch">
         <label for="searchBar">Search for a bike:</label>
-        <input id="searchBar" type="text" placeholder="Search Bike">
-        <label for="serialNumber">What is the Serial Number on the bike?</label>
+        <input id="searchBar" type="text" placeholder="Search Location">
+        <!-- <label for="serialNumber">What is the Serial Number on the bike?</label>
         <input id="serialNumber" type="text" placeholder="Not mandatory, but highly recommended.">
         <label for="manufacturer">Who manufactured your bike?</label>
         <input type="text" id="manufacturer">
         <label for="color">What color is your bike?</label>
-        <input type="text" id="color">
-        <button type="button" class="waves-effect waves-light btn" id="searchBike" name="button">Search</button>
+        <input type="text" id="color"> -->
+        <button type="button" class="waves-effect waves-light btn" id="searhButton" name="button">Search</button>
       </div>
-      <div class="displayBikes">
-        <ul>
 
-        </ul>
-      </div>
+
     </div>
+    <div id="map"></div>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap">
+    </script>
   </body>
 </html>

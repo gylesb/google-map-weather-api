@@ -1,5 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-exports.apiKey = "ba624e73dcf88821f38288c2db5d2789c275645870fad5fd0fc5ac1de8587c6e"
+exports.apiKey = "AIzaSyCwSdWR15ZNoTDzZqWSMgYLBtPdwLMBgVQ"
 
 },{}],2:[function(require,module,exports){
 'use strict';
@@ -8,14 +8,37 @@ var apiKey = require('./../.env').apiKey;
 
 $(document).ready(function () {
   $('#searchBike').click(function () {
-    var searchBike = $('#searchBar').val();
+    var searchMaps = $('#searchBar').val();
     $('#searchBar').val("");
-    var searchId = $('#serialNumber').val();
-    $('#serialNumber').val("");
-    var searchModel = $('#manufacturer').val();
-    $('#manufacturer').val("");
-    var searchColor = $('#color').val();
-    $('#color').val("");
+
+    // This example requires the Places library. Include the libraries=places
+    // parameter when you first load the API. For example:
+    // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+
+    function initMap() {
+      var map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: -33.866, lng: 151.196 },
+        zoom: 15
+      });
+
+      var infowindow = new google.maps.InfoWindow();
+      var service = new google.maps.places.PlacesService(map);
+
+      service.getDetails({
+        placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4'
+      }, function (place, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          var marker = new google.maps.Marker({
+            map: map,
+            position: place.geometry.location
+          });
+          google.maps.event.addListener(marker, 'click', function () {
+            infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + 'Place ID: ' + place.place_id + '<br>' + place.formatted_address + '</div>');
+            infowindow.open(map, this);
+          });
+        }
+      });
+    }
 
     $.ajax({
       url: 'https://bikeindex.org/api/v3/search?q=' + searchBike + '&appid=' + apiKey,
