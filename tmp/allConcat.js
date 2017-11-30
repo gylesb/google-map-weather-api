@@ -1,61 +1,88 @@
-var apiKey = require('./../.env').apiKey;
+var apiKeyWeather = require('./../.env').apiKeyWeather;
 
-$(document).ready(function() {
-  $('#searchBike').click(function() {
-    var searchMaps = $('#searchBar').val();
-    $('#searchBar').val("");
+var lat;
+var long;
 
-    // This example requires the Places library. Include the libraries=places
-    // parameter when you first load the API. For example:
-    // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+$( document ).ready(function() {
+  $('#locateUser').click(locateUser);
 
-    function initMap() {
-      var map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: -47.6062, lng: -122.3321},
-        zoom: 15
-      });
+  $('#weatherLocation').click(function() {
+    let city = $('#location').val();
+    $('#location').val("");
 
-      var infowindow = new google.maps.InfoWindow();
-      var service = new google.maps.places.PlacesService(map);
-
-      service.getDetails({
-        placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4'
-      }, function(place, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          var marker = new google.maps.Marker({
-            map: map,
-            position: place.geometry.location
-          });
-          google.maps.event.addListener(marker, 'click', function() {
-            infowindow.setContent('<div><strong>' + place.name + '</strong><br>' +
-              'Place ID: ' + place.place_id + '<br>' +
-              place.formatted_address + '</div>');
-            infowindow.open(map, this);
-          });
+    let promise = new Promise(function(resolve, reject) {
+      let request = new XMLHttpRequest();
+      let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKeyWeather}`;
+      request.onload = function() {
+        if (this.status === 200) {
+          resolve(request.response);
+        } else {
+          reject(Error(request.statusText));
         }
-      });
-    }
-
-    $.ajax({
-      url: `https://bikeindex.org/api/v3/search?q=${searchBike}&appid=${apiKey}`,
-      type: 'GET',
-      data: {
-        format: 'json'
-      },
-      success: function success(response) {
-        console.log(response);
-        response.bikes.forEach(function(bike) {
-          let name = bike.title;
-          let photo = bike.thumb;
-          let serial = bike.serial;
-          console.log(name);
-          $('.displayBikes').append("<div class='card'><h5 class='bikeTitle'>"+name+"</h5><img class='bikeImage' src='"+photo+"'></div>");
-
-        });
       }
-      // error: function() {
-      //   $('#errors').text("There was an error processing your request. Please try again.")
-      // }
+      request.open("GET", url, true);
+      request.send();
+    });
+
+    promise.then(function(response) {
+      let body = JSON.parse(response);
+
+      console.log(body.coord.lat);
+      console.log(body.coord.lon);
+      var searchedPosition = {coords: {latitude: body.coord.lat,longitude: body.coord.lon}}
+
+      geolocationSuccess(searchedPosition);
+      $('.showHumidity').text(`The humidity in ${city} is ${body.main.humidity}%`);
+      $('.showTemp').text(`The temperature in Kelvins is ${body.main.temp} degrees.`);
+    }, function(error) {
+      $('.showErrors').text(`There was an error processing your request: ${error.message}`);
     });
   });
 });
+
+//google maps functions
+function locateUser() {
+  // If the browser supports the Geolocation API
+  if (navigator.geolocation){
+    var positionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10 * 1000 // 10 seconds
+    };
+    navigator.geolocation.getCurrentPosition(geolocationSuccess, geolocationError, positionOptions);
+  }
+  else {
+    alert("Your browser doesn't support the Geolocation API");
+  }
+}
+
+// this is the success callback from telling the navigator (your browser) to get the current user's position
+// we do this on line 13 above. We pass in a function to call on success, a function to call on error, and some options to tell the geolocation api how we want it to run.
+// on successfully locating the user, geolocationSuccess() gets called automatically, and it is passed the user's position as an argument.
+// on error, geolocationError is called.
+
+function geolocationSuccess(position) {
+
+  // here we take the `position` object returned by the geolocation api
+  // and turn it into google maps LatLng object by calling the google.maps.LatLng constructor function
+  // it 2 arguments: one for latitude, one for longitude.
+  // You could refactor this section to pass google maps your own coordinates rather than using geolocation for the user's current location.
+  // But you must use coordinates to use this method.
+  var userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+  var myOptions = {
+    zoom : 16,
+    center : userLatLng,
+    mapTypeId : google.maps.MapTypeId.ROADMAP
+  };
+  // Draw the map - you have to use 'getElementById' here.
+  var mapObject = new google.maps.Map(document.getElementById("map"), myOptions);
+  // Place the marker
+  new google.maps.Marker({
+    map: mapObject,
+    position: userLatLng
+  });
+}
+
+function geolocationError(positionError) {
+  alert(positionError);
+}
